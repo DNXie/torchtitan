@@ -195,6 +195,7 @@ class CheckpointManager:
         sd_adapter: type[StateDictAdapter] | None,
         base_folder: str = "",
         ft_manager: FTManager | None = None,
+        checkpoint_path: str | None = None,
     ) -> None:
         self.enable_checkpoint = checkpoint_config.enable_checkpoint
         self.last_save_in_hf = checkpoint_config.last_save_in_hf
@@ -228,7 +229,8 @@ class CheckpointManager:
                     self.states[k].load_state_dict(v)
 
             self.ft_manager.set_state_dict_fns(load_state_dict, state_dict)
-            self.ft_replica_id = ft_manager.replica_id
+            if ft_manager is not None:
+                self.ft_replica_id = ft_manager.config.replica_id
 
         async_mode = checkpoint_config.async_mode.lower()
         self.enable_staging = (
@@ -255,7 +257,7 @@ class CheckpointManager:
         self.cpu_offload_state_dict = None
         self.stager = None
 
-        self.folder = os.path.join(base_folder, checkpoint_config.folder)
+        self.folder = checkpoint_path
 
         # Checkpoint policy related fields.
         self.initial_load_path = checkpoint_config.initial_load_path
@@ -571,6 +573,7 @@ class CheckpointManager:
         logger.info(f"Loading the checkpoint from {checkpoint_id}.")
         begin = time.monotonic()
         states = self._states_to_load(model_only)
+        print("Model begings to be loaded")
         self.dcp_load(
             states,
             checkpoint_id=checkpoint_id,
@@ -787,8 +790,9 @@ class CheckpointManager:
             discovered_checkpoints = []
             for filename in os.listdir(self.folder):
                 match = re.search(r"step-(\d+)", filename)
-                path = os.path.join(self.folder, filename)
-                discovered_checkpoints.append((int(match.group(1)), path))
+                if match:
+                    path = os.path.join(self.folder, filename)
+                    discovered_checkpoints.append((int(match.group(1)), path))
 
             discovered_checkpoints.sort()
             to_delete = discovered_checkpoints[: -1 * self.keep_latest_k]

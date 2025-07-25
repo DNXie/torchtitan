@@ -259,12 +259,12 @@ def init_distributed(job_config):
 
     # enable torch nccl flight recorder in the mode that would dump files if timeout is detected
     _warn_overwrite_env(TRACE_BUFFER_SIZE, str(job_config.comm.trace_buf_size))
-    if job_config.comm.trace_buf_size > 0:
-        # dump on timeout by default if trace buffer is enabled
-        _warn_overwrite_env(DUMP_ON_TIMEOUT, "1")
-        dump_dir = f"{job_config.job.dump_folder}/comm_trace"
-        os.makedirs(dump_dir, exist_ok=True)
-        _warn_overwrite_env(TRACE_FILE, f"{dump_dir}/rank_")
+    # if job_config.comm.trace_buf_size > 0:
+    #     # dump on timeout by default if trace buffer is enabled
+    #     _warn_overwrite_env(DUMP_ON_TIMEOUT, "1")
+    #     dump_dir = f"{job_config.job.dump_folder}/comm_trace"
+    #     os.makedirs(dump_dir, exist_ok=True)
+    #     _warn_overwrite_env(TRACE_FILE, f"{dump_dir}/rank_")
 
     torch.distributed.init_process_group(
         backend=_get_distributed_backend(job_config),
@@ -416,9 +416,7 @@ def _clip_grad_norm_with_ep(
     if math.isinf(norm_type):
         total_norm = torch.maximum(ep_grads_total_norm, non_ep_grads_total_norm)
     else:
-        total_norm = (
-            ep_grads_total_norm**norm_type + non_ep_grads_total_norm**norm_type
-        )
+        total_norm = ep_grads_total_norm**norm_type + non_ep_grads_total_norm**norm_type
         total_norm **= 1.0 / norm_type
 
     if pp_mesh is not None:

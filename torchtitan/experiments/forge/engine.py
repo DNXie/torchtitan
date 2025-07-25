@@ -8,9 +8,9 @@ import os
 from typing import Generator
 
 import torch
-from torch.distributed.elastic.multiprocessing.errors import record
 
 import torchtitan.protocols.train_spec as train_spec_module
+from torch.distributed.elastic.multiprocessing.errors import record
 from torchtitan.components.checkpoint import CheckpointManager
 from torchtitan.components.loss import rescale_accumulated_loss
 from torchtitan.distributed import ParallelDims, utils as dist_utils
@@ -213,6 +213,7 @@ class ForgeEngine(torch.distributed.checkpoint.stateful.Stateful):
             states={"train_state": self},
             checkpoint_config=job_config.checkpoint,
             sd_adapter=self.train_spec.state_dict_adapter,
+            checkpoint_path=job_config.checkpoint.folder,
         )
 
         loss_parallel_enabled = (
