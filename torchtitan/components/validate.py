@@ -63,7 +63,6 @@ class Validator(BaseValidator):
         self.job_config = job_config
         self.parallel_dims = parallel_dims
         self.loss_fn = loss_fn
-        print(f"dp_world_size: {dp_world_size}, dp_rank: {dp_rank}")  # 2, 0
         self.validation_dataloader = build_hf_validation_dataloader(
             job_config=job_config,
             dp_world_size=dp_world_size,
@@ -158,13 +157,6 @@ class Validator(BaseValidator):
                         logger.info(
                             f"[Validation Debug]  Rank {torch.distributed.get_rank()} batch {batch_idx} Loss {loss}"
                         )
-                        # logger.info(
-                        #     f"[Validation Debug] Rank {torch.distributed.get_rank()}. Batch {batch_idx}. input_dict['input'].shape",
-                        #     str(input_dict["input"].shape),
-                        # )
-
-                        # print("input_dict: ", input_dict)
-                        # exit()
 
             accumulated_losses.append(loss.detach())
 

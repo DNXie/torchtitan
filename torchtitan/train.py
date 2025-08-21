@@ -587,9 +587,6 @@ class Trainer(torch.distributed.checkpoint.stateful.Stateful):
                     self.job_config.validation.enabled
                     and self.validator.should_validate(self.step)
                 ):
-                    logger.info(
-                        f"[Validation Debug] Rank {torch.distributed.get_rank()} Running validation"
-                    )
                     self.validator.validate(self.model_parts, self.step)
 
                 # signal the profiler that the next profiling step has started
