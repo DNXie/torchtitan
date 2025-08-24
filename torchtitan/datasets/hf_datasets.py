@@ -32,6 +32,19 @@ def _process_c4_text(sample: dict[str, Any]) -> str:
     return sample["text"]
 
 
+def _load_wikitext_dataset(dataset_path: str, split: str):
+    """Load preprocessed Wikitext dataset from JSONL."""
+    # dataset_path should point to your JSONL file (produced by preload_deepseek_datasets.py)
+    return load_dataset(
+        "json", data_files={split: dataset_path}, split=split, streaming=False
+    )
+
+
+def _process_wikitext_text(sample: dict[str, Any]) -> str:
+    """Extract text from Wikitext sample."""
+    return sample["text"]
+
+
 @dataclass
 class DatasetConfig:
     path: str
@@ -55,6 +68,16 @@ DATASETS = {
         path="allenai/c4",
         loader=partial(_load_c4_dataset, split="validation"),
         text_processor=_process_c4_text,
+    ),
+    "wikitext_train": DatasetConfig(
+        path="/home/dxie/datasets/wikitext/raw/wikitext_train.jsonl",
+        loader=partial(_load_wikitext_dataset, split="train"),
+        text_processor=_process_wikitext_text,
+    ),
+    "wikitext_validation": DatasetConfig(
+        path="/home/dxie/datasets/wikitext/raw/wikitext_validation.jsonl",
+        loader=partial(_load_wikitext_dataset, split="validation"),
+        text_processor=_process_wikitext_text,
     ),
 }
 
