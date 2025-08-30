@@ -35,7 +35,7 @@ decay_type = "cosine"
 min_lr_factor = 0.1
 
 [training]
-local_batch_size = 128 # calculated by GBS/RG = 8192/16=128. Replica group=128(ranks)/16(PP)=16
+local_batch_size = 128 # calculated by GBS/RG = 1024/8=128. Replica group=128(ranks)/16(PP)=8
 seq_len = 4096
 max_norm = 1.0  # grad norm clipping
 steps = 10_000
