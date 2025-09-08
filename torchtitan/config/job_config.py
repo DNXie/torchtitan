@@ -19,9 +19,6 @@ class Job:
     description: str = "default job"
     """Description of the job"""
 
-    use_for_integration_test: bool = False
-    """Add this config to the integration test suite"""
-
     print_args: bool = False
     """Print the args to terminal"""
 
@@ -398,13 +395,13 @@ class Parallelism:
 
 @dataclass
 class Checkpoint:
-    enable_checkpoint: bool = False
+    enable: bool = False
     """Whether to enable checkpoint"""
 
     folder: str = "checkpoint"
     """
     The folder to store the checkpoints.
-    When enable_checkpoint is set to true, checkpoints will be in {--job.dump_folder}/{--checkpoint.folder}.
+    When enable is set to true, checkpoints will be in {--job.dump_folder}/{--checkpoint.folder}.
     """
 
     interval: int = 500
@@ -544,6 +541,12 @@ class ActivationCheckpoint:
     Note: this config applies to mms not limited to those matching the specified
     fqns, e.g. if "moe.router.gate", corresponding to Linear(in, out), is specified,
     ANY mm with shape matching (*, in) x (in, out) will be force recomputed.
+    """
+
+    early_stop: bool = False
+    """
+    Whether to stop recomputing early when all activations have already been
+    rematerialized.
     """
 
 
@@ -710,7 +713,7 @@ class Experimental:
 
 @dataclass
 class Validation:
-    enabled: bool = False
+    enable: bool = False
     """Enable validation to default run validation after each training loop"""
 
     dataset: str = "c4_validation"
@@ -729,7 +732,10 @@ class Validation:
     """Frequency of validation"""
 
     steps: int = -1
-    """Number of steps to take in the validation set, -1 means consuming all the data in the validation dataset"""
+    """
+    Number of steps to take in the validation set, -1 means consuming all the data in the validation dataset
+    WARNING: When setting to -1 there could be hangs due to mismatch among ranks
+    """
 
     def __post_init__(self):
         assert (

@@ -1,6 +1,6 @@
 [job]
 dump_folder = "./outputs"
-description = "DeepSeek-V3 671B model training"
+description = "model debug training for integration test"
 print_args = false
 
 [profiling]
@@ -11,36 +11,36 @@ enable_memory_snapshot = false
 save_memory_snapshot_folder = "memory_snapshot"
 
 [metrics]
-log_freq = 10
+log_freq = 1
 disable_color_printing = false
 enable_tensorboard = false
 save_tb_folder = "tb"
 enable_wandb = false
 
 [model]
-name = "deepseek_v3"
-flavor = "671B"
-hf_assets_path = "./assets/hf/DeepSeek-V3.1-Base"
+name = "llama3"
+flavor = "debugmodel"
+# test folder with tokenizer.json, for debug purpose only
+hf_assets_path = "./tests/assets/tokenizer"
 # converters = ["float8"]
 
 [optimizer]
 name = "AdamW"
-lr = 2.2e-4
+lr = 8e-4
 eps = 1e-8
 
 [lr_scheduler]
-warmup_steps = 2_000  # lr scheduler warm up, normally 20% of the train steps
+warmup_steps = 2  # lr scheduler warm up, normally 20% of the train steps
 decay_ratio = 0.8  # lr scheduler decay ratio, 80% of the train steps
-decay_type = "cosine"
-min_lr_factor = 0.1
+decay_type = "linear"
+min_lr_factor = 0.0
 
 [training]
-local_batch_size = 128 # calculated by GBS/RG = 1024/8=128. Replica group=128(ranks)/16(PP)=8
-seq_len = 4096
+local_batch_size = 8
+seq_len = 2048
 max_norm = 1.0  # grad norm clipping
-steps = 10_000
-compile = false
-dataset = "wikitext_train"  # supported datasets: c4_test (2K), c4 (177M)
+steps = 10
+dataset = "c4_test"  # supported datasets: c4_test (2K), c4 (177M)
 
 [parallelism]
 data_parallel_replicate_degree = 1
@@ -48,29 +48,34 @@ data_parallel_shard_degree = -1
 fsdp_reshard_after_forward = "default" # default / never / always
 tensor_parallel_degree = 1
 enable_async_tensor_parallel = false
-pipeline_parallel_degree = 16
-pipeline_parallel_schedule = "Interleaved1F1B"
-expert_parallel_degree = 64
+pipeline_parallel_degree = 1
+context_parallel_degree = 1
+expert_parallel_degree = 1
 expert_tensor_parallel_degree = 1
 
 [checkpoint]
 enable = false
 folder = "checkpoint"
-interval = 500
-last_save_model_only = true
+interval = 10
+last_save_model_only = false
 export_dtype = "float32"
-async_mode = "disabled"  # ["disabled", "async", "async_with_pinned_mem]"
+async_mode = "disabled"  # ["disabled", "async", "async_with_pinned_mem"]
 
 [activation_checkpoint]
 mode = "selective"  # ["none", "selective", "full"]
-selective_ac_option = 'op'  # 'int' = ac every positive int layer or 'op', ac based on ops policy
+selective_ac_option = '2'  # 'int' = ac every positive int layer or 'op', ac based on ops policy
 
 [compile]
-enable=true
-components = ["loss"] # ["model", "loss"]
+enable=false
+components = ["model", "loss"]
 
 [float8]
 enable_fsdp_float8_all_gather = false
 precompute_float8_dynamic_scale_for_fsdp = false
-filter_fqns = ["output", "router.gate"]
-moe_fqns_prototype = ["experts"]
+filter_fqns = ["output"]
+
+[validation]
+enable = false
+dataset = "c4_validation"
+freq = 5
+steps = 10
