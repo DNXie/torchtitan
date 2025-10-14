@@ -7,6 +7,7 @@
 import enum
 import functools
 import os
+import pprint
 import queue
 import re
 import shutil
@@ -502,6 +503,17 @@ class CheckpointManager:
                 )
                 GarbageCollection.collect("GC collection invoked by checkpointer.")
             else:
+                print(
+                    f"[DEBUG] curr_step {curr_step}, states before dcp_save",
+                    states.keys(),
+                )
+                pprint.pprint(states)
+                print(f"[DEBUG] curr_step {curr_step}, train_states before dcp_save")
+                pprint.pprint(states[TRAIN_STATE].__dict__)
+                print(
+                    f"[DEBUG] curr_step {curr_step}, optimizer before dcp_save",
+                    states[OPTIMIZER],
+                )
                 self.dcp_save(
                     states,
                     checkpoint_id=checkpoint_id,
@@ -597,11 +609,22 @@ class CheckpointManager:
         logger.info(f"Loading the checkpoint from {checkpoint_id}.")
         begin = time.monotonic()
         states = self._states_to_load(model_only)
+        print(f"[DEBUG] step {step}, _states_to_load, model_only", model_only)
+        print(
+            f"[DEBUG] step {step}, before dcp_load, optimizer {self.states[OPTIMIZER]}"
+        )
+        print(f"[DEBUG] step {step}, before dcp_load, train_state")
+        pprint.pprint(states[TRAIN_STATE].__dict__)
         self.dcp_load(
             states,
             checkpoint_id=checkpoint_id,
             from_hf=from_hf,
         )
+        print(
+            f"[DEBUG] step {step}, after dcp_load, optimizer {self.states[OPTIMIZER]}"
+        )
+        print(f"[DEBUG] step {step}, after dcp_load, train_state")
+        pprint.pprint(states[TRAIN_STATE].__dict__)
         GarbageCollection.collect("GC collection for checkpoint loading.")
         logger.info(
             f"Finished loading the checkpoint in {time.monotonic() - begin:.2f} seconds."
